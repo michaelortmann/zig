@@ -480,15 +480,13 @@ const extern_getauxval = switch (builtin.zig_backend) {
 };
 
 comptime {
-    const root = @import("root");
     // Export this only when building executable, otherwise it is overriding
     // the libc implementation
-    if (extern_getauxval and (builtin.output_mode == .Exe or @hasDecl(root, "main"))) {
+    if (extern_getauxval and (builtin.output_mode == .Exe or @hasDecl(@import("root"), "main")) and builtin.link_mode == .dynamic)
         @export(&getauxvalImpl, .{ .name = "getauxval", .linkage = .weak });
-    }
 }
 
-pub const getauxval = if (extern_getauxval) struct {
+pub const getauxval = if (!extern_getauxval) struct {
     extern fn getauxval(index: usize) usize;
 }.getauxval else getauxvalImpl;
 
